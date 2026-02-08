@@ -1,13 +1,6 @@
 # Specific to Pulsaria
-logs/*
-data/*
-!data/README.md
-playground.py
-playground.ipynb
-repo_random_code/
-repo_random_code/*
-test_read_config.yaml
-analysis_config_files/*
+temp/*
+log_utils/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
