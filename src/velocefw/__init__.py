@@ -11,6 +11,6 @@ hassle-free access to the original VELOCE-III framework.
 
 """
 
-from .fits import get_header, get_table
+from .read_fits import get_header, get_table
 
 __all__ = ["get_header", "get_table"]
