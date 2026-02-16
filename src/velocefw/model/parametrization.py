@@ -111,7 +111,7 @@ class Parametrization:
             When any index in shared_groups is out of bounds (not in [0,
             full_ndim-1]) or when the size of the vector of free parameters does
             not match the expected number based on the shared groups.
-            'free_ndim = full_ndim - (total_shared_indices - number_of_shared_groups)'
+            `free_ndim = full_ndim - (total_shared_indices - number_of_shared_groups)`
 
         """
         # Step 1: Initialize union-find structure
