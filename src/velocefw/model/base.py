@@ -442,28 +442,24 @@ class FixedConstant(BaseModel):
         return np.full_like(x, self._value, dtype=float)
 
 
-class Constant(BaseModel):
-    def __init__(self, name: str = "const") -> None:
-        super().__init__(name=name)
-
-    @property
-    def n_params(self) -> int:
-        return 1
-
-    def evaluate(
-        self,
-        x: np.ndarray,
-        theta_local: np.ndarray,
-        **kwargs: dict[str, Any],  # noqa: ARG002
-    ) -> np.ndarray:
-        return np.full_like(x, float(theta_local[0]), dtype=float)
-
-    def param_names(self) -> list[str]:
-        return ["c"]
-
-
 class UnaryOp(BaseModel):
+    """Handle unary operations of a given BaseModel."""
+
     def __init__(self, operand: BaseModel, op_func: np.ufunc, symbol: str) -> None:
+        """Class that handles unary operations of a given BaseModel.
+
+        Parameters
+        ----------
+        operand : BaseModel
+            The model to which the unary operation will be applied.
+        op_func : np.ufunc
+            The numpy ufunc that defines the unary operation (e.g., np.exp, np.log,
+            np.negative).
+        symbol : str
+            The symbol representing the unary operation (e.g., "exp", "log", "-"),
+            used for naming the composed model.
+
+        """
         self.operand = operand
         self.op_func = op_func
         self.symbol = symbol
@@ -471,6 +467,17 @@ class UnaryOp(BaseModel):
 
     @property
     def n_params(self) -> int:
+        """Number of parameters.
+
+        Same as the `operand` model.
+
+        Returns
+        -------
+        int
+            The number of parameters in the unary operation, which is the same as
+            the number of parameters in the `operand` model.
+
+        """
         return self.operand.n_params
 
     def evaluate(
@@ -479,10 +486,44 @@ class UnaryOp(BaseModel):
         theta: list | np.ndarray,
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
+        """Evaluate the function.
+
+        Evaluate the function by applying the unary operation to the operand
+        model.
+
+        Parameters
+        ----------
+        x : float | list | np.ndarray
+            Array of input values at which to evaluate the model.
+        theta : list | np.ndarray
+            The model parameters.
+        **kwargs : dict[str, Any]
+            Additional keyword arguments that may be needed for evaluation.
+
+        Returns
+        -------
+        np.ndarray
+            Return an array of the same shape as `x` filled with the result of
+            applying the unary operation to the operand model evaluated at `x`.
+
+        """
         return self.op_func(self.operand.evaluate(x, theta, **kwargs))
 
 
 class BinaryOp(BaseModel):
+    """Handle binary operations of two given BaseModels.
+
+    Two BaseModel instances are combined using a specified binary operation
+    defined by a numpy ufunc, and the resulting model can be evaluated at any
+    input `x` with the correct parameters. The class takes care of correctly
+    partitioning the parameter vector for the left and right models when
+    evaluating the composed model.
+
+    A series of BinaryOp instances can be combined to create complex model
+    expressions using standard operators like +, -, *, /, and **, allowing for
+    flexible and intuitive model composition.
+    """
+
     def __init__(
         self,
         left: BaseModel,
@@ -490,6 +531,22 @@ class BinaryOp(BaseModel):
         op_func: np.ufunc,
         symbol: str,
     ) -> None:
+        """Class that handles binary operations of two given BaseModels.
+
+        Parameters
+        ----------
+        left : BaseModel
+            The left model in the binary operation.
+        right : BaseModel
+            The right model in the binary operation.
+        op_func : np.ufunc
+            The numpy ufunc that defines the binary operation (e.g., np.add,
+            np.subtract, np.multiply, np.divide, np.power).
+        symbol : str
+            The symbol representing the binary operation (e.g., "+", "-", "*",
+            "/", "**"), used for naming the composed model.
+
+        """
         self.left = left
         self.right = right
         self.op_func = op_func
@@ -498,6 +555,15 @@ class BinaryOp(BaseModel):
 
     @property
     def n_params(self) -> int:
+        """Number of parameters.
+
+        Returns
+        -------
+        int
+            The number of parameters in the binary operation, which is the sum
+            of the number of parameters in the `left` and `right` models.
+
+        """
         return self.left.n_params + self.right.n_params
 
     def evaluate(
@@ -506,6 +572,32 @@ class BinaryOp(BaseModel):
         theta: list | np.ndarray,
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
+        """Evaluate the function.
+
+        Evaluate the function by evaluating the left and right models at the
+        given input `x` and parameters `theta`, and then applying the binary
+        operation to the results. The parameter vector `theta` is partitioned
+        into two parts: the first part corresponds to the parameters of the
+        `left` model and the second part corresponds to the parameters of the
+        `right` model. The method ensures that the correct subset of parameters
+        is passed to each model when evaluating them.
+
+        Parameters
+        ----------
+        x : float | list | np.ndarray
+            Array of input values at which to evaluate the model.
+        theta : list | np.ndarray
+            The model parameters (both left and right models).
+        **kwargs : dict[str, Any]
+            Additional keyword arguments that may be needed for evaluation.
+
+        Returns
+        -------
+        np.ndarray
+            Return an array of the same shape as `x` filled with the result of
+            applying the binary operation to the left and right models evaluated at `x`.
+
+        """
         index_left = self.left.n_params
         theta_left = theta[:index_left]
         theta_right = theta[index_left:]
