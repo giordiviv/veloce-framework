@@ -1,8 +1,12 @@
 """Implementation of a polynomial model."""
 
+import logging
+
 import numpy as np
 
 from velocefw.model.base import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class PolynomialBasis(BaseModel):
@@ -22,7 +26,17 @@ class PolynomialBasis(BaseModel):
     """
 
     def __init__(self, degree: int, name: str = "polynomial") -> None:
-        """Init."""
+        """Initialize the polynomial basis model."""
+        if not isinstance(degree, int):
+            msg = f"degree must be an integer, got {type(degree).__name__}."
+            logger.error(msg)
+            raise TypeError(msg)
+
+        if degree < 1:
+            msg = f"degree must be at least 1, got {degree}."
+            logger.error(msg)
+            raise ValueError(msg)
+
         super().__init__(name=name)
         self.degree = degree
 
@@ -38,10 +52,11 @@ class PolynomialBasis(BaseModel):
     def evaluate(
         self,
         theta: np.ndarray,
-        x: np.ndarray,
+        x: float | list | np.ndarray,
         **kwargs: object,  # noqa: ARG002
     ) -> np.ndarray:
         """Evaluate the model."""
+        x = np.asarray(x, float)
         result = np.zeros_like(x)
         for i in range(1, self.degree + 1):
             result += float(theta[i - 1]) * x**i
