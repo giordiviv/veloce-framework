@@ -22,6 +22,7 @@ like +, -, *, /, and **.
 
 from __future__ import annotations
 
+import inspect
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -159,6 +160,31 @@ class BaseModel:
 
         """
         self._name = name
+
+    def __init_subclass__(cls) -> None:
+        """Check that subclasses implement the required interface."""
+        super().__init_subclass__()
+
+        # Only check if subclass overrides evaluate
+        if "evaluate" in cls.__dict__:
+            sig = inspect.signature(cls.evaluate)
+            minimum_params = {"self", "theta", "x", "**kwargs"}
+            if len(sig.parameters) < len(minimum_params):
+                msg = f"{cls.__name__}.evaluate must have at least 4 parameters:"
+                msg += " (self, theta, x, **kwargs)"
+                logger.error(msg)
+                raise TypeError(msg)
+
+            kind_kwargs = inspect.Parameter.VAR_KEYWORD
+            set_kinds = {p.kind for p in sig.parameters.values()}
+            if kind_kwargs not in set_kinds:
+                msg = f"{cls.__name__}.evaluate must accept **kwargs."
+                logger.error(msg)
+                raise TypeError(msg)
+        else:
+            msg = f"{cls.__name__} does not implement evaluate method."
+            logger.error(msg)
+            raise NotImplementedError(msg)
 
     # To be implemented by subclasses --------------------------------------------------
     @property
