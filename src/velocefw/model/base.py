@@ -179,18 +179,18 @@ class BaseModel:
 
     def evaluate(
         self,
-        x: float | list | np.ndarray,  # noqa: ARG002
         theta: list | np.ndarray,  # noqa: ARG002
+        x: float | list | np.ndarray,  # noqa: ARG002
         **kwargs: dict[str, Any],  # noqa: ARG002
     ) -> np.ndarray:
-        """Evaluate the model or submodel at the given input `x` and parameters `theta`.
+        """Evaluate the model or submodel at the given parameters `theta` and input `x`.
 
         Parameters
         ----------
-        x : float | list | np.ndarray
-            The input values at which to evaluate the model.
         theta : list | np.ndarray
             The model parameters.
+        x : float | list | np.ndarray
+            The input values at which to evaluate the model.
         **kwargs : dict[str, Any]
             Additional keyword arguments that may be needed for evaluation
             (e.g., time of observation, etc.).
@@ -232,8 +232,8 @@ class BaseModel:
 
     def evaluate_local(
         self,
-        x: float | list | np.ndarray,
         theta_local: list | np.ndarray,
+        x: float | list | np.ndarray,
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Evaluate the model at the given input `x` and local parameters `theta_local`.
@@ -243,10 +243,10 @@ class BaseModel:
 
         Parameters
         ----------
-        x : float | list | np.ndarray
-            The input values at which to evaluate the model.
         theta_local : list | np.ndarray
             The model parameters for the local submodel.
+        x : float | list | np.ndarray
+            The input values at which to evaluate the model.
         **kwargs : dict[str, Any]
             Additional keyword arguments that may be needed for evaluation
             (e.g., time of observation, etc.).
@@ -269,7 +269,7 @@ class BaseModel:
             msg = f"{self.name} expected {self.n_params} params, got {theta_local.size}"
             logger.error(msg)
             raise ValueError(msg)
-        return self.evaluate(x, theta_local, **kwargs)
+        return self.evaluate(theta_local, x, **kwargs)
 
     # Algebraic composition operators --------------------------------------------------
     def __add__(self, other: float | np.number | BaseModel) -> BinaryOp:
@@ -417,21 +417,21 @@ class FixedConstant(BaseModel):
 
     def evaluate(
         self,
-        x: float | list | np.ndarray,
         theta: list | np.ndarray,  # noqa: ARG002
+        x: float | list | np.ndarray,
         **kwargs: dict[str, Any],  # noqa: ARG002
     ) -> np.ndarray:
         """Evaluate constant function.
 
         Parameters
         ----------
+        theta : list | np.ndarray
+            The model parameters (not used for FixedConstant, but included for
+            compatibility with the evaluate method signature).
         x : float | list | np.ndarray
             Array of input values at which to evaluate the model. The output
             will have the same shape as `x`, but the values will be constant
             regardless of `x`.
-        theta : list | np.ndarray
-            The model parameters (not used for FixedConstant, but included for
-            compatibility with the evaluate method signature).
         **kwargs : dict[str, Any]
             Additional keyword arguments that may be needed for evaluation (not
             used for FixedConstant, but included for compatibility with the
@@ -487,8 +487,8 @@ class UnaryOp(BaseModel):
 
     def evaluate(
         self,
-        x: float | list | np.ndarray,
         theta: list | np.ndarray,
+        x: float | list | np.ndarray,
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Evaluate the function.
@@ -498,10 +498,10 @@ class UnaryOp(BaseModel):
 
         Parameters
         ----------
-        x : float | list | np.ndarray
-            Array of input values at which to evaluate the model.
         theta : list | np.ndarray
             The model parameters.
+        x : float | list | np.ndarray
+            Array of input values at which to evaluate the model.
         **kwargs : dict[str, Any]
             Additional keyword arguments that may be needed for evaluation.
 
@@ -512,7 +512,7 @@ class UnaryOp(BaseModel):
             applying the unary operation to the operand model evaluated at `x`.
 
         """
-        return self.op_func(self.operand.evaluate(x, theta, **kwargs))
+        return self.op_func(self.operand.evaluate(theta, x, **kwargs))
 
 
 class BinaryOp(BaseModel):
@@ -573,8 +573,8 @@ class BinaryOp(BaseModel):
 
     def evaluate(
         self,
-        x: float | list | np.ndarray,
         theta: list | np.ndarray,
+        x: float | list | np.ndarray,
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Evaluate the function.
@@ -589,10 +589,10 @@ class BinaryOp(BaseModel):
 
         Parameters
         ----------
-        x : float | list | np.ndarray
-            Array of input values at which to evaluate the model.
         theta : list | np.ndarray
             The model parameters (both left and right models).
+        x : float | list | np.ndarray
+            Array of input values at which to evaluate the model.
         **kwargs : dict[str, Any]
             Additional keyword arguments that may be needed for evaluation.
 
@@ -608,6 +608,6 @@ class BinaryOp(BaseModel):
         theta_right = theta[index_left:]
 
         return self.op_func(
-            self.left.evaluate_local(x, theta_left, **kwargs),
-            self.right.evaluate_local(x, theta_right, **kwargs),
+            self.left.evaluate_local(theta_left, x, **kwargs),
+            self.right.evaluate_local(theta_right, x, **kwargs),
         )
