@@ -1,3 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "velocefw"
+version = "0.0.1"
+description = "VELOCE framework"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = ["numpy>=1.23"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -39,7 +58,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = [] # Remove deprecated issue of typehint for self in objects.
+ignore = []      # Remove deprecated issue of typehint for self in objects.
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
