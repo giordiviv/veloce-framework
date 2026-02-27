@@ -11,6 +11,7 @@ hassle-free access to the original VELOCE-III framework.
 
 """
 
-from .read_fits import get_header, get_table
+from velocefw import model
+from velocefw.read_fits import get_header, get_table
 
-__all__ = ["get_header", "get_table"]
+__all__ = ["get_header", "get_table", "model"]

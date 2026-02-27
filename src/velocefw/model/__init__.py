@@ -37,10 +37,10 @@ NOTE: With `theta` we indicate the parameters of the model, which are passed as
 arguments to the `evaluate` method.
 """
 
-from .base import BaseModel
-from .compile import CompiledModel, compile_model
-from .implemented_models import PolynomialBasis
-from .parametrization import Parametrization, ParamMeta
+from velocefw.model.base import BaseModel
+from velocefw.model.compile import CompiledModel, compile_model
+from velocefw.model.implemented_models import PolynomialBasis
+from velocefw.model.parametrization import Parametrization, ParamMeta
 
 __all__ = [
     "BaseModel",
