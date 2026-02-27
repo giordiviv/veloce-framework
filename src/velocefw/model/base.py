@@ -334,6 +334,10 @@ class BaseModel:
         """Power operator for model composition."""
         return BinaryOp(self, _wrap_scalar(other), np.power, "**")
 
+    def __rpow__(self, other: float | np.number | BaseModel) -> BinaryOp:
+        """Right power operator for model composition."""
+        return BinaryOp(_wrap_scalar(other), self, np.power, "**")
+
     def __neg__(self) -> UnaryOp:
         """Negation operator for model composition."""
         return UnaryOp(self, np.negative, "-")
