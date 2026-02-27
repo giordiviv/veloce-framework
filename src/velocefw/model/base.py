@@ -406,6 +406,11 @@ class FixedConstant(BaseModel):
         super().__init__(name=name)
 
     @property
+    def value(self) -> float:
+        """Get the fixed constant value of the model."""
+        return self._value
+
+    @property
     def n_params(self) -> int:
         """Number of parameters in the model (always 0 for FixedConstant)."""
         return 0
