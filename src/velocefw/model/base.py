@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -181,7 +181,7 @@ class BaseModel:
         self,
         theta: list | np.ndarray,  # noqa: ARG002
         x: float | list | np.ndarray,  # noqa: ARG002
-        **kwargs: dict[str, Any],  # noqa: ARG002
+        **kwargs: object,  # noqa: ARG002
     ) -> np.ndarray:
         """Evaluate the model or submodel at the given parameters `theta` and input `x`.
 
@@ -191,7 +191,7 @@ class BaseModel:
             The model parameters.
         x : float | list | np.ndarray
             The input values at which to evaluate the model.
-        **kwargs : dict[str, Any]
+        **kwargs : object
             Additional keyword arguments that may be needed for evaluation
             (e.g., time of observation, etc.).
 
@@ -234,7 +234,7 @@ class BaseModel:
         self,
         theta_local: list | np.ndarray,
         x: float | list | np.ndarray,
-        **kwargs: dict[str, Any],
+        **kwargs: object,
     ) -> np.ndarray:
         """Evaluate the model at the given input `x` and local parameters `theta_local`.
 
@@ -247,7 +247,7 @@ class BaseModel:
             The model parameters for the local submodel.
         x : float | list | np.ndarray
             The input values at which to evaluate the model.
-        **kwargs : dict[str, Any]
+        **kwargs : object
             Additional keyword arguments that may be needed for evaluation
             (e.g., time of observation, etc.).
 
@@ -419,7 +419,7 @@ class FixedConstant(BaseModel):
         self,
         theta: list | np.ndarray,  # noqa: ARG002
         x: float | list | np.ndarray,
-        **kwargs: dict[str, Any],  # noqa: ARG002
+        **kwargs: object,  # noqa: ARG002
     ) -> np.ndarray:
         """Evaluate constant function.
 
@@ -432,7 +432,7 @@ class FixedConstant(BaseModel):
             Array of input values at which to evaluate the model. The output
             will have the same shape as `x`, but the values will be constant
             regardless of `x`.
-        **kwargs : dict[str, Any]
+        **kwargs : object
             Additional keyword arguments that may be needed for evaluation (not
             used for FixedConstant, but included for compatibility with the
             evaluate method signature).
@@ -489,7 +489,7 @@ class UnaryOp(BaseModel):
         self,
         theta: list | np.ndarray,
         x: float | list | np.ndarray,
-        **kwargs: dict[str, Any],
+        **kwargs: object,
     ) -> np.ndarray:
         """Evaluate the function.
 
@@ -502,7 +502,7 @@ class UnaryOp(BaseModel):
             The model parameters.
         x : float | list | np.ndarray
             Array of input values at which to evaluate the model.
-        **kwargs : dict[str, Any]
+        **kwargs : object
             Additional keyword arguments that may be needed for evaluation.
 
         Returns
@@ -575,7 +575,7 @@ class BinaryOp(BaseModel):
         self,
         theta: list | np.ndarray,
         x: float | list | np.ndarray,
-        **kwargs: dict[str, Any],
+        **kwargs: object,
     ) -> np.ndarray:
         """Evaluate the function.
 
@@ -593,7 +593,7 @@ class BinaryOp(BaseModel):
             The model parameters (both left and right models).
         x : float | list | np.ndarray
             Array of input values at which to evaluate the model.
-        **kwargs : dict[str, Any]
+        **kwargs : object
             Additional keyword arguments that may be needed for evaluation.
 
         Returns
