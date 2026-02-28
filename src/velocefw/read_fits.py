@@ -37,19 +37,9 @@ def get_header(
         logger.error(message)
         raise FileNotFoundError(message)
 
-    try:
-        with fits.open(file) as hdul:  # type: ignore[no-untyped-call]
-            base_hdu: fits.PrimaryHDU = hdul[hdu]  # pyright: ignore[reportAssignmentType]
-            header = dict(base_hdu.header)
-    except Exception as e:
-        logger.exception(
-            "Error reading primary header from: %s",
-            file,
-            extra={
-                "exception": e,
-            },
-        )
-        raise
+    with fits.open(file) as hdul:  # type: ignore[no-untyped-call]
+        base_hdu: fits.PrimaryHDU = hdul[hdu]  # pyright: ignore[reportAssignmentType]
+        header = dict(base_hdu.header)
 
     logger.debug("Successfully read primary header from: %s", file)
     return header
@@ -114,15 +104,7 @@ def get_table(
                         table.add_column(table[col][:, i], name=f"{col}_{i}", index=-1)  # type: ignore[attr-defined]
                     table.remove_column(col)  # type: ignore[attr-defined]
 
-            try:
-                dataframe = table.to_pandas()
-            except ValueError as e:
-                logger.exception(
-                    "Error reading data from: %s",
-                    file,
-                    extra={"exception": e},
-                )
-                raise
+            dataframe = table.to_pandas()
 
     logger.debug("Successfully read dataframe from: %s", file)
     return dataframe
