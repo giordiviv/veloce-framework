@@ -33,6 +33,7 @@ class Parametrization:
 
     full_ndim: int
     free_ndim: int
+    mask_free: np.ndarray
     expand: Callable[[np.ndarray], np.ndarray]  # maps free theta to full theta
 
     @staticmethod
@@ -59,7 +60,13 @@ class Parametrization:
                 raise ValueError(msg)
             return theta_free
 
-        return Parametrization(full_ndim=full_ndim, free_ndim=full_ndim, expand=expand)
+        mask_free = np.ones(full_ndim, dtype=bool)
+        return Parametrization(
+            full_ndim=full_ndim,
+            free_ndim=full_ndim,
+            mask_free=mask_free,
+            expand=expand,
+        )
 
     @staticmethod
     def from_shared(  # noqa: C901
@@ -147,8 +154,12 @@ class Parametrization:
                 theta_full[indices] = theta_free[free_index]
             return theta_full
 
+        mask_free = np.zeros(full_ndim, dtype=bool)
+        for root in unique_roots:
+            mask_free[root] = True
         return Parametrization(
             full_ndim=full_ndim,
             free_ndim=num_free_params,
+            mask_free=mask_free,
             expand=expand,
         )
