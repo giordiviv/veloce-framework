@@ -10,8 +10,10 @@ Currently, the following models are implemented:
 
 """
 
-from .polynomial import PolynomialBasis
+from velocefw.model.implemented_models.constant import Constant
+from velocefw.model.implemented_models.polynomial import PolynomialBasis
 
 __all__ = [
+    "Constant",
     "PolynomialBasis",
 ]

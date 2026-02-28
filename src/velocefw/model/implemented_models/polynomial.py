@@ -45,18 +45,20 @@ class PolynomialBasis(BaseModel):
         """Number of parameters."""
         return self.degree
 
+    @property
     def param_names(self) -> list[str]:
         """Parameter names."""
         return [f"a{i}" for i in range(1, self.degree + 1)]
 
     def evaluate(
         self,
-        theta: np.ndarray,
+        theta: list | np.ndarray,
         x: float | list | np.ndarray,
         **kwargs: object,  # noqa: ARG002
     ) -> np.ndarray:
         """Evaluate the model."""
         x = np.asarray(x, float)
+        theta = np.asarray(theta, float).ravel()
         result = np.zeros_like(x)
         for i in range(1, self.degree + 1):
             result += float(theta[i - 1]) * x**i
