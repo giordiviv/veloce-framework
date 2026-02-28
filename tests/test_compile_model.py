@@ -34,12 +34,22 @@ def test_compile_model() -> None:
         logger.warning(msg)
         raise TypeError(msg)
     # Check that the number of free parameters matches the model's n_params
-    if model.n_params == compiled_model.n_params_full:
-        logger.info("Compiled model n_params_full matches model n_params.")
+    if model.n_params == compiled_model.n_params:
+        logger.info("Compiled model n_params matches model n_params.")
     else:
         msg = (
-            f"Compiled model n_params_full {compiled_model.n_params_full} does not "
+            f"Compiled model n_params {compiled_model.n_params} does not "
             f"match model n_params {model.n_params}."
+        )
+        logger.warning(msg)
+        raise ValueError(msg)
+    # Check number of names matches n_params
+    if len(compiled_model.param_names) == compiled_model.n_params:
+        logger.info("Number of parameter names matches n_params.")
+    else:
+        msg = (
+            f"Number of parameter names {len(compiled_model.param_names)} does not "
+            f"match n_params {compiled_model.n_params}."
         )
         logger.warning(msg)
         raise ValueError(msg)
@@ -224,6 +234,18 @@ def test_compile_model_shared_parametrization(shared_degree: int | str) -> None:
     theta_wrong_length = theta_free[:-1]  # one fewer parameter
     with pytest.raises(ValueError, match="free"):
         compiled_model(theta_free=theta_wrong_length, x=x)
+
+    # Check that the number of free parameters in the compiled model matches the
+    # expected number of free names in the parametrization
+    if compiled_model.n_params_free == len(compiled_model.param_names_free):
+        logger.info("Number of free parameters matches number of free names.")
+    else:
+        msg = (
+            f"Number of free parameters {compiled_model.n_params_free} does not "
+            f"match number of free names {len(compiled_model.param_names_free)}."
+        )
+        logger.warning(msg)
+        raise ValueError(msg)
 
 
 def test_compile_unary_operator() -> None:
