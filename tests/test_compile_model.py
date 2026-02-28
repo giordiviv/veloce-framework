@@ -33,10 +33,21 @@ def test_compile_model() -> None:
         )
         logger.warning(msg)
         raise TypeError(msg)
+    # Check that the number of free parameters matches the model's n_params
+    if model.n_params == compiled_model.n_params_full:
+        logger.info("Compiled model n_params_full matches model n_params.")
+    else:
+        msg = (
+            f"Compiled model n_params_full {compiled_model.n_params_full} does not "
+            f"match model n_params {model.n_params}."
+        )
+        logger.warning(msg)
+        raise ValueError(msg)
 
 
 @pytest.mark.parametrize("degree", [1, 2, 10])
-def test_compile_model_evaluation(degree: int) -> None:
+@pytest.mark.parametrize("x", [3.0, [0.0, 1.0, 2.0], np.array([0.0, 1.0, 2.0])])
+def test_compile_model_evaluation(degree: int, x: float | list | np.ndarray) -> None:
     """Test that the compiled model evaluates correctly."""
     # Define parameters and input
     theta = rng.uniform(low=-1.0, high=1.0, size=degree)  # coefficients for x, x^2, x^3
@@ -53,7 +64,20 @@ def test_compile_model_evaluation(degree: int) -> None:
         msg = f"Compiled model evaluation {output} does not "
         msg += f"match expected {expected_output}."
         logger.warning(msg)
-        raise TypeError(msg)
+        raise RuntimeError(msg)
+
+    # Check that it raises an error when x is not provided and the model requires it
+    with pytest.raises(ValueError, match="x"):
+        compiled_model(theta_free=theta)
+
+    # Check if output has the correct shape
+    if output.shape == x.shape:
+        logger.info("Compiled model output has correct shape.")
+    else:
+        msg = f"Compiled model output shape {output.shape} does not match "
+        msg += f"input shape {x.shape}."
+        logger.warning(msg)
+        raise ValueError(msg)
 
 
 def test_compile_model_wrong_theta_length() -> None:
@@ -103,7 +127,7 @@ def test_fixed_constant_polynomial_combination() -> None:
         msg = f"Combined compiled model evaluation {output} does not "
         msg += f"match expected {expected_output}."
         logger.warning(msg)
-        raise TypeError(msg)
+        raise RuntimeError(msg)
 
 
 def test_compile_of_two_polynomials() -> None:
@@ -133,7 +157,23 @@ def test_compile_of_two_polynomials() -> None:
         msg = f"Combined polynomial model evaluation {output} does not "
         msg += f"match expected {expected_output}."
         logger.warning(msg)
-        raise TypeError(msg)
+        raise RuntimeError(msg)
+
+    # Check that it raises an error when given wrong theta length
+    theta_wrong_length = theta_combined[:-1]  # one fewer parameter
+    with pytest.raises(ValueError, match="free"):
+        compiled_combined_model(theta_free=theta_wrong_length, x=x)
+    theta_wrong_length = [*theta_combined, 0.01]  # one extra parameter
+    with pytest.raises(ValueError, match="free"):
+        compiled_combined_model(theta_free=theta_wrong_length, x=x)
+
+    # Check that wrong Parametrization raises an error
+    wrong_parametrization = Parametrization.identity(full_ndim=len(theta_combined) + 3)
+    with pytest.raises(ValueError, match="Expected"):
+        compile_model(combined_model, parametrization=wrong_parametrization)
+    wrong_parametrization = Parametrization.identity(full_ndim=len(theta_combined) - 2)
+    with pytest.raises(ValueError, match="Expected"):
+        compile_model(combined_model, parametrization=wrong_parametrization)
 
 
 @pytest.mark.parametrize("shared_degree", ["first", "second", "both", "all"])
@@ -176,3 +216,31 @@ def test_compile_model_shared_parametrization(shared_degree: int | str) -> None:
         msg += f"expected numpy.ndarray with shape {x.shape}."
         logger.warning(msg)
         raise TypeError(msg)
+
+    # Check returns error when given wrong theta length
+    theta_wrong_length = [*theta_free, 0.01]  # one extra parameter
+    with pytest.raises(ValueError, match="free"):
+        compiled_model(theta_free=theta_wrong_length, x=x)
+    theta_wrong_length = theta_free[:-1]  # one fewer parameter
+    with pytest.raises(ValueError, match="free"):
+        compiled_model(theta_free=theta_wrong_length, x=x)
+
+
+def test_compile_unary_operator() -> None:
+    """Test that a model with a unary operator compiles correctly."""
+    degree = 2
+    model = -PolynomialBasis(degree=degree)
+    compiled_model = compile_model(model)
+    theta = rng.uniform(low=-1.0, high=1.0, size=degree)  # coefficients for x, x^2
+    x = np.array([0.0, 1.0, 2.0])  # input values
+    expected_output = np.zeros_like(x)
+    for i in range(degree):
+        expected_output -= theta[i] * x ** (i + 1)
+    output = compiled_model(theta_free=theta, x=x)
+    if np.allclose(output, expected_output):
+        logger.info("Compiled model with unary operator evaluated successfully.")
+    else:
+        msg = f"Compiled model with unary operator evaluation {output} does not "
+        msg += f"match expected {expected_output}."
+        logger.warning(msg)
+        raise RuntimeError(msg)

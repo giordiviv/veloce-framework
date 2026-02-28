@@ -5,37 +5,61 @@ import logging
 import numpy as np
 import pytest
 
-from velocefw.model import FixedConstant, PolynomialBasis
+from velocefw.model import BaseModel, Constant, FixedConstant, PolynomialBasis
 
 logger = logging.getLogger(__name__)
 
 
-def test_evaluate_shape_polynomial() -> None:
+@pytest.mark.parametrize("x", [3.0, [0.0, 1.0, 2.0], np.array([0.0, 1.0, 2.0])])
+def test_evaluate_shape(x: float | list | np.ndarray) -> None:
     """Test that the shape of the output of the polynomial model is correct."""
     degree = 3
     model = PolynomialBasis(degree=degree)
     theta = np.array([1.0, 0.5, 0.25])  # coefficients for x, x^2, x^3
-    x = np.array([0.0, 1.0, 2.0])  # input values
     output = model.evaluate(theta=theta, x=x)
-    if output.shape == x.shape:
+    inputs = np.asarray(x, float)
+    if output.shape == inputs.shape:
         logger.info("Output shape matches input shape.")
     else:
-        msg = f"Output shape {output.shape} does not match input shape {x.shape}."
+        msg = f"Output shape {output.shape} does not match input shape {inputs.shape}."
+        logger.warning(msg)
+        raise TypeError(msg)
+
+    # Test that the shape of the output of the combined model is correct
+    model = Constant() + model
+    output = model.evaluate(theta=[1.0, *theta.tolist()], x=x)
+    inputs = np.atleast_1d(x)
+    if output.shape == inputs.shape:
+        logger.info("Output shape matches input shape for combined model.")
+    else:
+        msg = f"Output shape {output.shape} does not match input "
+        msg += f"shape {inputs.shape} for combined model."
         logger.warning(msg)
         raise TypeError(msg)
 
 
-def test_evaluate_type_polynomial() -> None:
+@pytest.mark.parametrize("x", [3.0, [0.0, 1.0, 2.0], np.array([0.0, 1.0, 2.0])])
+def test_evaluate_type(x: float | list | np.ndarray) -> None:
     """Test that the type of the output of the polynomial model is correct."""
     degree = 3
     model = PolynomialBasis(degree=degree)
     theta = np.array([1.0, 0.5, 0.25])  # coefficients for x, x^2, x^3
-    x = 3.0  # input values
     output = model.evaluate(theta=theta, x=x)
     if isinstance(output, np.ndarray):
         logger.info("Output is of type numpy.ndarray.")
     else:
         msg = f"Output is of type {type(output)}, expected numpy.ndarray."
+        logger.warning(msg)
+        raise TypeError(msg)
+
+    # Test that the type of the output of the combined model is correct
+    model = Constant() + model
+    output = model.evaluate(theta=[1.0, *theta.tolist()], x=x)
+    if isinstance(output, np.ndarray):
+        logger.info("Output is of type numpy.ndarray for combined model.")
+    else:
+        msg = f"Output is of type {type(output)}, "
+        msg += "expected numpy.ndarray for combined model."
         logger.warning(msg)
         raise TypeError(msg)
 
@@ -54,6 +78,18 @@ def test_evaluate_polynomial() -> None:
         msg = (
             f"Polynomial evaluation {output} does not match expected {expected_output}."
         )
+        logger.warning(msg)
+        raise TypeError(msg)
+
+    # Test that the combined model evaluates correctly
+    model = Constant() + model
+    expected_output += 1.0  # add the constant term
+    output = model.evaluate(theta=[1.0, *theta.tolist()], x=x)
+    if np.allclose(output, expected_output):
+        logger.info("Combined model evaluation matches expected output.")
+    else:
+        msg = f"Combined model evaluation {output} does "
+        msg += f"not match expected {expected_output}."
         logger.warning(msg)
         raise TypeError(msg)
 
@@ -120,19 +156,40 @@ def test_exponential_polynomial_combination() -> None:
         raise TypeError(msg)
 
 
-def test_layout_two_polynomials() -> None:
-    """Test that a layout with two polynomial models works correctly."""
-    degree1 = 2
-    degree2 = 3
-    model1 = PolynomialBasis(degree=degree1, name="poly1")
-    model2 = PolynomialBasis(degree=degree2, name="poly2")
-    combined_model = model1 + model2
-    full_ndim = combined_model.n_params
-    layout = combined_model.layout()
-    if layout.ndim == full_ndim:
-        msg = "Layout ndim matches full_ndim."
-        logger.info(msg)
-    else:
-        msg = f"Layout ndim {layout.ndim} does not match full_ndim {full_ndim}."
-        logger.warning(msg)
-        raise TypeError(msg)
+def test_wrong_model_initialization() -> None:
+    """Test that initializing a model with wrong parameters raises an error."""
+    with pytest.raises(NotImplementedError, match="evaluate"):
+
+        class WrongModelMissingEvaluate(BaseModel):
+            pass
+
+    with pytest.raises(TypeError, match="evaluate"):
+
+        class WrongModelMissingKwargs(BaseModel):
+            def evaluate(
+                self,
+                theta: list | np.ndarray,
+                x: float | list | np.ndarray,
+            ) -> np.ndarray:
+                return np.array(x) * theta
+
+    with pytest.raises(TypeError, match="evaluate"):
+
+        class WrongModelMissingX(BaseModel):
+            def evaluate(
+                self,
+                theta: list | np.ndarray,
+                **kwargs: object,  # noqa: ARG002
+            ) -> np.ndarray:
+                return np.array([0.0]) * theta
+
+    with pytest.raises(NotImplementedError, match="n_params"):
+
+        class WrongModelMissingNParams(BaseModel):
+            def evaluate(
+                self,
+                theta: list | np.ndarray,
+                x: float | list | np.ndarray,
+                **kwargs: object,  # noqa: ARG002
+            ) -> np.ndarray:
+                return np.array(x) * theta
