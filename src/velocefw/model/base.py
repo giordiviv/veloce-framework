@@ -95,8 +95,8 @@ class Layout:
             self.name_to_index[param.global_name] = param.index
         return out
 
-    def model_names(self) -> tuple[set[str], dict[str, list[int]]]:
-        """Set of model names in the layout.
+    def _available_names_mapped(self) -> tuple[set[str], dict[str, list[int]]]:
+        """Set of model names in the layout and how they map to parameter indices.
 
         Returns
         -------
@@ -125,6 +125,21 @@ class Layout:
             map_model_to_index[effective_name].append(param.index)
         return available_names, map_model_to_index
 
+    def model_names(self) -> set[str]:
+        """Set of unique model names in the layout, with counters for duplicates.
+
+        Returns
+        -------
+        set[str]
+            A set of unique model names present in the layout, with counters
+            appended to ensure uniqueness when the same model appears multiple
+            times in the expression tree. This allows for easy identification of
+            the different models that are part of the overall model expression.
+
+        """
+        available_names, _ = self._available_names_mapped()
+        return available_names
+
     def mask(self, model_name: str) -> np.ndarray:
         """Boolean mask for the parameters of a given model name.
 
@@ -147,7 +162,7 @@ class Layout:
 
         """
         mask = np.zeros(self.ndim, dtype=bool)
-        available_names, map_model_to_index = self.model_names()
+        available_names, map_model_to_index = self._available_names_mapped()
 
         if model_name not in available_names:
             msg = f"Model name '{model_name}' not found in layout."
