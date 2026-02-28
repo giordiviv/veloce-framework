@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -94,6 +94,71 @@ class Layout:
             param.global_name = out[-1]
             self.name_to_index[param.global_name] = param.index
         return out
+
+    def model_names(self) -> tuple[set[str], dict[str, list[int]]]:
+        """Set of model names in the layout.
+
+        Returns
+        -------
+        set[str]
+            A set of unique model names present in the layout, with counters
+            appended to ensure uniqueness when the same model appears multiple
+            times in the expression tree.
+        dict[str, list[int]]
+            A mapping from each unique model name to a list of global parameter
+            indices corresponding to that model. This allows for easy retrieval
+            of the parameters associated with each model in the layout.
+            unique model name -> list of indices in theta_full of that model
+
+        """
+        counts = Counter(param.model_name for param in self.params_meta)
+        available_names = set()
+        map_model_to_index = defaultdict(list)
+
+        for param in self.params_meta:
+            effective_name = (
+                f"{param.model_name}{param.model_counter}"
+                if counts[param.model_name] > 1
+                else param.model_name
+            )
+            available_names.add(effective_name)
+            map_model_to_index[effective_name].append(param.index)
+        return available_names, map_model_to_index
+
+    def mask(self, model_name: str) -> np.ndarray:
+        """Boolean mask for the parameters of a given model name.
+
+        Parameters
+        ----------
+        model_name : str
+            The name of the model for which to create the mask. This should be
+            one of the unique model names returned by the `model_names` method,
+            which may include counters if the same model appears multiple times
+            in the expression tree.
+
+        Returns
+        -------
+        np.ndarray
+            A boolean array of length `ndim` where True indicates that the
+            parameter at that index belongs to the specified model, and False
+            otherwise. This allows for easy selection of the parameters
+            associated with a particular model when working with the full
+            parameter vector.
+
+        """
+        mask = np.zeros(self.ndim, dtype=bool)
+        available_names, map_model_to_index = self.model_names()
+
+        if model_name not in available_names:
+            msg = f"Model name '{model_name}' not found in layout."
+            msg += f" Available model names: {available_names}."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        for index in map_model_to_index[model_name]:
+            mask[index] = True
+
+        return mask
 
     def get_index(self, name: str) -> int:
         """Global index of a parameter by full name.
