@@ -25,7 +25,7 @@ class PolynomialBasis(BaseModel):
       - a1, ..., an: coefficients of the polynomial terms.
     """
 
-    def __init__(self, degree: int, name: str = "polynomial") -> None:
+    def __init__(self, degree: int, name: str = "poly") -> None:
         """Initialize the polynomial basis model."""
         if not isinstance(degree, int):
             msg = f"degree must be an integer, got {type(degree).__name__}."
