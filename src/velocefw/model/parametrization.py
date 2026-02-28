@@ -1,9 +1,5 @@
 """Handle parametrization of model parameters.
 
-The ParamMeta class stores metadata for each parameter, including its index in
-the full global theta vector, its local index within the node's parameter block,
-and optional human-readable names.
-
 The Parametrization class defines how free parameters map to the full global
 theta vector.  It includes a static method for creating an identity
 parametrization (where all parameters are free) and a method for creating a
@@ -25,20 +21,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ParamMeta:
-    """Metadata for a parameter.
-
-    Parameter in the full global theta vector, which is the concatenation of all
-    node parameters.
-    """
-
-    index: int  # global index in theta_full
-    local_index: int  # index within the node's local theta block
-    local_name: str | None = None  # optional human-readable name within the node
-    global_name: str | None = None  # optional human-readable name for the global param
 
 
 @dataclass(frozen=True)

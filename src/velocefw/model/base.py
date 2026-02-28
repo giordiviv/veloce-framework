@@ -4,6 +4,10 @@ BaseModel is the core class that all models inherit from. It defines the basic
 interface for models, including parameter handling, evaluation, and algebraic
 composition.
 
+The ParamMeta class stores metadata for each parameter, including its index in
+the full global theta vector, its local index within the node's parameter block,
+and optional human-readable names.
+
 The Layout class defines the structure of the global parameter vector for a
 model, including metadata for each parameter.
 
@@ -24,17 +28,33 @@ from __future__ import annotations
 
 import inspect
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .parametrization import ParamMeta
-
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=False)
+class ParamMeta:
+    """Metadata for a parameter.
+
+    Parameter in the full global theta vector, which is the concatenation of all
+    node parameters.
+    """
+
+    node: int  # counter for the node to ensure
+    model_name: str  # name of the model node this parameter belongs to
+    model_counter: int  # counter for the model node to ensure unique global names
+    local_name: str  # optional human-readable name within the node
+    local_index: int  # index within the node's local theta block
+    index: int  # global index in theta_full
+    global_name: str | None = None  # optional human-readable global name
 
 
 @dataclass
@@ -45,22 +65,38 @@ class Layout:
     params_meta: list[ParamMeta]
     name_to_index: Mapping[str, int] | None = None
 
+    def __post_init__(self) -> None:
+        """Complete global names for parameters."""
+        _ = self.names
+
     @property
     def names(self) -> list[str]:
         """List of parameter names in the global theta vector."""
-        out = []
+        out: list[str] = []
+        self.name_to_index = {}  # build name_to_index mapping while generating names
+        repeated_local_names = defaultdict(int)
         for param in self.params_meta:
-            if param.global_name:
-                out.append(f"{param.global_name}")
-            elif param.local_name:
-                out.append(f"{param.local_name}")
+            repeated_local_names[param.local_name] += 1
+
+        repeated_models = {
+            param.model_name for param in self.params_meta if param.model_counter > 0
+        }
+
+        for param in self.params_meta:
+            local_name = param.local_name
+            model_name = param.model_name
+            if model_name in repeated_models:
+                out.append(f"{model_name}{param.model_counter}.{local_name}")
+            elif repeated_local_names[local_name] > 1:
+                out.append(f"{model_name}.{local_name}")
             else:
-                out.append(f"p{param.local_index}")
-        self.name_to_index = {name: i for i, name in enumerate(out)}
+                out.append(f"{local_name}")
+            param.global_name = out[-1]
+            self.name_to_index[param.global_name] = param.index
         return out
 
-    def find(self, name: str) -> int:
-        """Find the global index of a parameter by full name.
+    def get_index(self, name: str) -> int:
+        """Global index of a parameter by full name.
 
         Parameters
         ----------
@@ -122,26 +158,26 @@ class _LayoutBuilder:
             The model node whose parameters are being added to the layout.
 
         """
-        for local_index, local_name in enumerate(node.param_names()):
-            params_names = {param.global_name for param in self.params_meta}
-            global_name = (
-                f"{node.name}.{local_name}"
-                if local_name in params_names
-                else local_name
-            )
-            i = 1
-            while global_name in params_names:
-                global_name = f"{node.name}{i}.{local_name}"
-                i += 1
+        node_counter = 0
+        model_counter = 0
+        for param in self.params_meta:
+            node_counter = max(node_counter, param.node + 1)
+            if param.model_name == node.name:
+                model_counter = max(model_counter, param.model_counter + 1)
+
+        for local_index, local_name in enumerate(node.param_names):
             self.params_meta.append(
                 ParamMeta(
-                    index=self.current_index + local_index,
-                    local_index=local_index,
+                    node=node_counter,
+                    model_name=node.name,
+                    model_counter=model_counter,
                     local_name=local_name,
-                    global_name=global_name,
+                    local_index=local_index,
+                    index=self.current_index + local_index,
                 ),
             )
-        self.current_index += len(node.param_names())
+
+        self.current_index += len(node.param_names)
 
     def build(self) -> Layout:
         return Layout(ndim=self.current_index, params_meta=self.params_meta)
@@ -186,6 +222,11 @@ class BaseModel:
             logger.error(msg)
             raise NotImplementedError(msg)
 
+        if "n_params" not in cls.__dict__:
+            msg = f"{cls.__name__} does not implement n_params property."
+            logger.error(msg)
+            raise NotImplementedError(msg)
+
     # To be implemented by subclasses --------------------------------------------------
     @property
     def n_params(self) -> int:
@@ -194,6 +235,7 @@ class BaseModel:
         logger.exception(msg)
         raise NotImplementedError(msg)
 
+    @property
     def param_names(self) -> list[str]:
         """Parameter names for the model.
 
@@ -637,7 +679,9 @@ class BinaryOp(BaseModel):
         theta_left = theta[:index_left]
         theta_right = theta[index_left:]
 
-        return self.op_func(
-            self.left.evaluate_local(theta_left, x, **kwargs),
-            self.right.evaluate_local(theta_right, x, **kwargs),
+        return np.atleast_1d(
+            self.op_func(
+                self.left.evaluate_local(theta_left, x, **kwargs),
+                self.right.evaluate_local(theta_right, x, **kwargs),
+            ),
         )

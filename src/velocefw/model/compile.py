@@ -89,6 +89,14 @@ def compile_model(
     layout = model.layout()
     parametrization = parametrization or Parametrization.identity(layout.ndim)
 
+    # Check that the number of parameters used in the compiled function
+    # matches the expected number from the layout
+    if parametrization.full_ndim != layout.ndim:
+        msg = f"Expected {layout.ndim} parameters in parametrization, "
+        msg += f"got {parametrization.full_ndim}"
+        logger.error(msg)
+        raise ValueError(msg)
+
     def compile_fn(
         node: BaseModel,
         counter_params: int,
@@ -140,12 +148,7 @@ def compile_model(
         return fn, counter_params + local_ndim
 
     fn_full, counter_params = compile_fn(model, 0)
-    # Check that the number of parameters used in the compiled function
-    # matches the expected number from the layout
-    if counter_params != layout.ndim:
-        msg = f"Expected {layout.ndim} parameters in compilation, got {counter_params}"
-        logger.error(msg)
-        raise ValueError(msg)
+
     return CompiledModel(model, layout, parametrization, fn_full)
 
 
@@ -181,7 +184,7 @@ class CompiledModel:
         self,
         theta_free: list | np.ndarray,
         *,
-        x: np.ndarray | None = None,
+        x: float | list | np.ndarray | None = None,
         **kwargs: object,
     ) -> np.ndarray:
         """Evaluate the compiled model at the given free parameters and input `x`.
@@ -206,12 +209,6 @@ class CompiledModel:
         """
         # Handle theta
         theta_free = np.asarray(theta_free, float).ravel()
-        if theta_free.size != self.n_params_free:
-            msg = (
-                f"Expected {self.n_params_free} free parameters, got {theta_free.size}"
-            )
-            logger.error(msg)
-            raise ValueError(msg)
         theta_full = self.parametrization.expand(theta_free)
         # Possibly add logic to have a default x if not provided.
         if x is None:
