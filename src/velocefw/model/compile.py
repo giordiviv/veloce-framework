@@ -92,7 +92,7 @@ def compile_model(
     # Check that the number of parameters used in the compiled function
     # matches the expected number from the layout
     if parametrization.full_ndim != layout.ndim:
-        msg = f"Expected {layout.ndim} parameters in parametrization, "
+        msg = f"Expected {layout.ndim} dimensions in parametrization, "
         msg += f"got {parametrization.full_ndim}"
         logger.error(msg)
         raise ValueError(msg)
