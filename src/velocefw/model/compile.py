@@ -86,7 +86,7 @@ def compile_model(
         The compiled model.
 
     """
-    layout = model.layout()
+    layout = model.layout
     parametrization = parametrization or Parametrization.identity(layout.ndim)
 
     # Check that the number of parameters used in the compiled function
@@ -176,9 +176,20 @@ class CompiledModel:
         return self.parametrization.free_ndim
 
     @property
-    def n_params_full(self) -> int:
+    def n_params(self) -> int:
         """Number of parameters in the full global theta vector."""
         return self.parametrization.full_ndim
+
+    @property
+    def param_names(self) -> list[str]:
+        """Names of all parameters in the full global theta vector."""
+        return self.layout.names
+
+    @property
+    def param_names_free(self) -> list[str]:
+        """Names of the free parameters in the model."""
+        mask = self.parametrization.mask_free
+        return np.array(self.layout.names)[mask].tolist()
 
     def __call__(
         self,
