@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -111,7 +111,14 @@ class Layout:
             unique model name -> list of indices in theta_full of that model
 
         """
-        counts = Counter(param.model_name for param in self.params_meta)
+        counts = {}
+        for param in self.params_meta:
+            # Add 1 to the model_counter to get the total count of that model in
+            # the layout
+            counts[param.model_name] = max(
+                param.model_counter + 1,
+                counts.get(param.model_name, 0),
+            )
         available_names = set()
         map_model_to_index = defaultdict(list)
 
