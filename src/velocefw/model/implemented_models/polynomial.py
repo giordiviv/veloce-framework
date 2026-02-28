@@ -56,7 +56,25 @@ class PolynomialBasis(BaseModel):
         x: float | list | np.ndarray,
         **kwargs: object,  # noqa: ARG002
     ) -> np.ndarray:
-        """Evaluate the model."""
+        """Evaluate the model.
+
+        Parameters
+        ----------
+        theta : list | np.ndarray
+            The parameters of the model, which are the coefficients of the
+            polynomial terms.
+        x : float | list | np.ndarray
+            The input values at which to evaluate the model.
+        **kwargs : object
+            Additional keyword arguments that may be needed for evaluation (not
+            used in this model).
+
+        Returns
+        -------
+        np.ndarray
+            The model predictions for the corresponding inputs.
+
+        """
         x = np.asarray(x, float)
         theta = np.asarray(theta, float).ravel()
         result = np.zeros_like(x)
