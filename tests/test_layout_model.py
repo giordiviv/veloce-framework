@@ -12,7 +12,7 @@ def test_layout_polynomial() -> None:
     degree = 3
     model = PolynomialBasis(degree=degree)
     full_ndim = model.n_params
-    layout = model.layout()
+    layout = model.layout
     if layout.ndim == full_ndim:
         msg = "Layout ndim matches full_ndim."
         logger.info(msg)
@@ -26,7 +26,7 @@ def test_layout_names() -> None:
     """Test that the layout names are correct."""
     degree = 3
     model = PolynomialBasis(degree=degree)
-    layout = model.layout()
+    layout = model.layout
     expected_names = [f"a{i}" for i in range(1, degree + 1)]
     if layout.names == expected_names:
         msg = "Layout names match expected names."
@@ -43,7 +43,7 @@ def test_layout_constant() -> None:
     """Test that a layout with a constant model works correctly."""
     model = Constant()
     full_ndim = 1
-    layout = model.layout()
+    layout = model.layout
     if layout.ndim == full_ndim:
         msg = "Layout ndim matches full_ndim for constant model."
         logger.info(msg)
@@ -57,7 +57,7 @@ def test_layout_fixed_constant() -> None:
     """Test that a layout with a fixed constant model works correctly."""
     model = FixedConstant(value=2.0)
     full_ndim = 0
-    layout = model.layout()
+    layout = model.layout
     if layout.ndim == full_ndim:
         msg = "Layout ndim matches full_ndim for fixed constant model."
         logger.info(msg)
@@ -75,7 +75,7 @@ def test_layout_two_polynomials() -> None:
     model2 = PolynomialBasis(degree=degree2, name="poly2")
     combined_model = model1 + model2
     full_ndim = combined_model.n_params
-    layout = combined_model.layout()
+    layout = combined_model.layout
     if layout.ndim == full_ndim:
         msg = "Layout ndim matches full_ndim."
         logger.info(msg)
