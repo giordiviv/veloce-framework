@@ -39,7 +39,12 @@ arguments to the `evaluate` method.
 
 from velocefw.model.base import BaseModel, FixedConstant, ParamMeta
 from velocefw.model.compile import CompiledModel, compile_model
-from velocefw.model.implemented_models import Constant, PolynomialBasis
+from velocefw.model.implemented_models import (
+    Constant,
+    FourierSeries,
+    PolynomialBasis,
+    calculate_phase,
+)
 from velocefw.model.parametrization import Parametrization
 
 __all__ = [
@@ -47,8 +52,10 @@ __all__ = [
     "CompiledModel",
     "Constant",
     "FixedConstant",
+    "FourierSeries",
     "ParamMeta",
     "Parametrization",
     "PolynomialBasis",
+    "calculate_phase",
     "compile_model",
 ]

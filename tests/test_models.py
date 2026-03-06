@@ -5,7 +5,14 @@ import logging
 import numpy as np
 import pytest
 
-from velocefw.model import BaseModel, Constant, FixedConstant, PolynomialBasis
+from velocefw.model import (
+    BaseModel,
+    Constant,
+    FixedConstant,
+    FourierSeries,
+    PolynomialBasis,
+    calculate_phase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -277,3 +284,162 @@ def test_model_names_mapping_for_models_sharing_name() -> None:
         msg += f"expected {expected_mask_poly2}."
         logger.warning(msg)
         raise TypeError(msg)
+
+
+# Fourier series tests -----------------------------------------------------------------
+def test_calculate_phase() -> None:
+    """Test that the calculate_phase function works correctly."""
+    x = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+    period = 1.0
+    epoch = 0.0
+    expected_phase = np.array([0.0, 0.25, 0.5, 0.75, 0.0])
+    phase = calculate_phase(x=x, period=period, epoch=epoch)
+    if np.allclose(phase, expected_phase):
+        logger.info("Calculated phase matches expected phase.")
+    else:
+        msg = f"Calculated phase {phase} does not match expected {expected_phase}."
+        logger.warning(msg)
+        raise TypeError(msg)
+
+    period = 0.5
+    epoch = 0.25
+    expected_phase = np.array([0.5, 0.0, 0.5, 0.0, 0.5])
+    phase = calculate_phase(x=x, period=period, epoch=epoch)
+    if np.allclose(phase, expected_phase):
+        logger.info("Phases matches the expected phase for given period and epoch.")
+    else:
+        msg = f"Calculated phase {phase} does not match expected {expected_phase} "
+        msg += "for different period and epoch."
+        logger.warning(msg)
+        raise TypeError(msg)
+
+
+def test_fourier_series_parameter_names() -> None:
+    """Test that the parameter names of the Fourier series model are correct."""
+    nharm = 3
+    model = FourierSeries(nharm=nharm)
+    expected_param_names = ["a1", "b1", "a2", "b2", "a3", "b3"]
+    if model.param_names == expected_param_names:
+        logger.info("Fourier series parameter names match expected names.")
+    else:
+        msg = f"Fourier series parameter names {model.param_names} do not match "
+        msg += f"expected {expected_param_names}."
+        logger.warning(msg)
+        raise TypeError(msg)
+
+
+def test_fourier_series_evaluation() -> None:
+    """Test that the Fourier series model evaluates correctly."""
+    nharm = 2
+    model = FourierSeries(nharm=nharm)
+    theta = np.array([1.0, 0.5, 0.25, 0.125])  # a1, b1, a2, b2
+    x = np.array([0.0, 0.25, 0.5, 0.75, 1.0])  # input values
+    period = 1.0
+    epoch = 0.0
+    expected_output = (
+        theta[0] * np.cos(2 * np.pi * 1 * (x - epoch) / period)
+        + theta[1] * np.sin(2 * np.pi * 1 * (x - epoch) / period)
+        + theta[2] * np.cos(2 * np.pi * 2 * (x - epoch) / period)
+        + theta[3] * np.sin(2 * np.pi * 2 * (x - epoch) / period)
+    )
+    output = model.evaluate(theta, x, period=period, epoch=epoch)
+    if np.allclose(output, expected_output):
+        logger.info("Fourier series evaluation matches expected output.")
+    else:
+        msg = f"Fourier series evaluation {output} does not "
+        msg += f"match expected {expected_output}."
+        logger.warning(msg)
+        raise TypeError(msg)
+
+
+def test_fourier_series_combination() -> None:
+    """Test that a Fourier series combined with a polynomial evaluates correctly."""
+    # Define the models
+    nharm = 2
+    fourier_model = FourierSeries(nharm=nharm)
+    degree = 2
+    polynomial_model = PolynomialBasis(degree=degree)
+    combined_model = fourier_model + polynomial_model
+    # Define parameters and input
+    theta_fourier = np.array([1.0, 0.5, 0.25, 0.125])  # a1, b1, a2, b2
+    theta_polynomial = np.array([0.5, 0.25])  # coefficients for x, x^2
+    theta_combined = np.concatenate((theta_fourier, theta_polynomial))
+    x = np.array([0.0, 0.25, 0.5, 0.75, 1.0])  # input values
+    period = 1.0
+    epoch = 0.0
+
+    # Evaluate the combined model
+    output = combined_model.evaluate(
+        theta=theta_combined,
+        x=x,
+        period=period,
+        epoch=epoch,
+    )
+    expected_fourier = (
+        theta_fourier[0] * np.cos(2 * np.pi * 1 * (x - epoch) / period)
+        + theta_fourier[1] * np.sin(2 * np.pi * 1 * (x - epoch) / period)
+        + theta_fourier[2] * np.cos(2 * np.pi * 2 * (x - epoch) / period)
+        + theta_fourier[3] * np.sin(2 * np.pi * 2 * (x - epoch) / period)
+    )
+    expected_polynomial = theta_polynomial[0] * x + theta_polynomial[1] * x**2
+    expected_output = expected_fourier + expected_polynomial
+    if np.allclose(output, expected_output):
+        msg = "Combined Fourier series and polynomial evaluation "
+        msg += "matches expected output."
+        logger.info(msg)
+    else:
+        msg = f"Combined model evaluation {output} does not "
+        msg += f"match expected {expected_output}."
+        logger.warning(msg)
+        raise TypeError(msg)
+
+
+def test_fourier_series_invalid_initialization() -> None:
+    """Test that initializing FourierSeries with invalid nharm raises an error."""
+    with pytest.raises(ValueError, match="nharm"):
+        FourierSeries(nharm=0)
+
+    with pytest.raises(ValueError, match="nharm"):
+        FourierSeries(nharm=-1)
+
+    with pytest.raises(TypeError, match="nharm"):
+        FourierSeries(nharm=1.5)  # pyright: ignore[reportArgumentType]
+
+    with pytest.raises(TypeError, match="nharm"):
+        FourierSeries(nharm=None)  # pyright: ignore[reportArgumentType]
+
+    with pytest.raises(TypeError, match="nharm"):
+        FourierSeries(nharm="two")  # pyright: ignore[reportArgumentType]
+
+
+def test_fourier_series_invalid_period() -> None:
+    """Test that evaluating FourierSeries with invalid period raises an error."""
+    model = FourierSeries(nharm=1)
+    theta = np.array([1.0, 0.5])  # a1, b1
+    x = np.array([0.0, 0.25, 0.5, 0.75, 1.0])  # input values
+
+    with pytest.raises(ValueError, match="Period"):
+        model.evaluate(theta=theta, x=x, P=0.0, E=0.0)
+
+    with pytest.raises(ValueError, match="Period"):
+        model.evaluate(theta=theta, x=x, P=-1.0, E=0.0)
+
+    with pytest.raises(TypeError, match="Period"):
+        model.evaluate(theta=theta, x=x, P="one", E=0.0)  # pyright: ignore[reportArgumentType]
+
+    with pytest.raises(TypeError, match="Period"):
+        model.evaluate(theta=theta, x=x, P=None, E=0.0)  # pyright: ignore[reportArgumentType]
+
+
+def test_fourier_series_invalid_epoch() -> None:
+    """Test that evaluating FourierSeries with invalid epoch raises an error."""
+    model = FourierSeries(nharm=1)
+    theta = np.array([1.0, 0.5])  # a1, b1
+    x = np.array([0.0, 0.25, 0.5, 0.75, 1.0])  # input values
+    period = 1.0
+
+    with pytest.raises(TypeError, match="Epoch"):
+        model.evaluate(theta=theta, x=x, P=period, E="zero")  # pyright: ignore[reportArgumentType]
+
+    with pytest.raises(TypeError, match="Epoch"):
+        model.evaluate(theta=theta, x=x, P=period, E=None)  # pyright: ignore[reportArgumentType]
