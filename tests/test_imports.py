@@ -30,3 +30,8 @@ def test_import_polynomial() -> None:
 def test_import_constant() -> None:
     """Test import of Constant."""
     from velocefw.model import Constant  # noqa: F401
+
+
+def test_import_fourier_series() -> None:
+    """Test import of FourierSeries."""
+    from velocefw.model import FourierSeries, calculate_phase  # noqa: F401
