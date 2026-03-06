@@ -11,7 +11,8 @@ hassle-free access to the original VELOCE-III framework.
 
 """
 
-from velocefw import model
+import velocefw.plots_utils as plot
+from velocefw import fit, model
 from velocefw.read_fits import get_header, get_table
 
-__all__ = ["get_header", "get_table", "model"]
+__all__ = ["fit", "get_header", "get_table", "model", "plot"]
