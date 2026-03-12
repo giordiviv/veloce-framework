@@ -1,8 +1,8 @@
 """Class that define the objective function to be minimized during the fitting process.
 
-The class is called `ModelEvaluator`, to increase clarity in the context of the
+The class is called `ModelObjectiveFunction`, to increase clarity in the context of the
 framework, where `Objective` could be difficult to understand. The
-`ModelEvaluator` class is responsible for computing the objective function to be
+`ModelObjectiveFunction` class is responsible for computing the objective function to be
 minimized during the fitting process.
 
 Objective functions available:
@@ -24,7 +24,7 @@ from velocefw.model import BaseModel, CompiledModel, compile_model
 logger = logging.getLogger(__name__)
 
 
-class ModelEvaluator:
+class ModelObjectiveFunction:
     """Class that calculates the objective functions for fitters."""
 
     def __init__(
@@ -35,7 +35,7 @@ class ModelEvaluator:
         yerr: np.ndarray | None = None,
         log_prior: Callable[[np.ndarray], float] | None = None,
     ) -> None:
-        """Initialize the ModelEvaluator.
+        """Initialize the ModelObjectiveFunction.
 
         Parameters
         ----------
