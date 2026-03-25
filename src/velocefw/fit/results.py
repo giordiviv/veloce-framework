@@ -1,13 +1,25 @@
 """Module that handles the fitting results."""
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
 from velocefw.model import BaseModel, CompiledModel, compile_model
 
 logger = logging.getLogger(__name__)
+
+
+class FailedFitError(Exception):
+    """Exception raised when a fit fails."""
+
+    def __init__(self, message: str) -> None:
+        """Initialize the FailedFitError with a message."""
+        self.msg = message
+
+    def __str__(self) -> str:
+        """Return the error message."""
+        return f"Failed fit: {self.msg}"
 
 
 @dataclass
@@ -17,9 +29,9 @@ class FitStatistics:
     residuals: np.ndarray
     rss: float
     rmse: float
-    chi2: float | None = None
-    reduced_chi2: float | None = None
-    dof: int | None = None
+    chi2: float
+    reduced_chi2: float
+    dof: int
 
 
 @dataclass(slots=True)
@@ -84,7 +96,7 @@ class SuccessfulFitResult(_FitResultBase):
     y_model: np.ndarray
     stats: FitStatistics
     yerr: np.ndarray | None = None
-    extra: dict | None = None
+    extra: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Ensure that the fit result is marked as successful."""
