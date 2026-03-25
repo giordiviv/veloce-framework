@@ -59,7 +59,7 @@ def fit_least_squares(
     """
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
-    yerr = None if yerr is None else np.asarray(yerr, dtype=float)
+    yerr = np.asarray(yerr, dtype=float) if yerr is not None else None
     if isinstance(compiled_model, BaseModel):
         compiled_model = compile_model(compiled_model)
 
@@ -100,13 +100,25 @@ def fit_least_squares(
     # Extra: error estimates from the covariance matrix if available
     # For covariance matrix, see:
     # https://stackoverflow.com/questions/42388139/how-to-compute-standard-deviation-errors-with-scipy-optimize-least-squares
-    covariance_matrix = np.linalg.inv(
-        optimization_result.jac.T @ optimization_result.jac,
-    )
-    theta_err = np.sqrt(np.diag(covariance_matrix))
+    _, s, vh_matrix = np.linalg.svd(optimization_result.jac, full_matrices=False)
+    tol = np.finfo(float).eps * s[0] * max(optimization_result.jac.shape)
+    w = s > tol
+    covariance_matrix = (vh_matrix[w].T / s[w] ** 2) @ vh_matrix[w]  # more stable
+    theta_err = np.sqrt(np.diag(covariance_matrix))  # 1sigma uncertainty on theta_free
+
+    # If one does not trust the input uncertainties yerr, one can rescale the
+    # covariance matrix by the reduced chi2 to assume the fit is good (reduced
+    # chi2 ~ 1) and get more realistic error estimates.
+    # Also useful when yerr is not provided.
+    reduced_chi2 = fit_statistics.reduced_chi2
+    theta_err_rescaled = np.sqrt(np.diag(covariance_matrix * reduced_chi2))
 
     # Extra: store the covariance matrix and parameter errors in the FitResult.extra
-    extra = {"theta_err": theta_err, "covariance_matrix": covariance_matrix}
+    extra = {
+        "theta_err": theta_err,
+        "covariance_matrix": covariance_matrix,
+        "theta_err_rescaled": theta_err_rescaled,
+    }
 
     return SuccessfulFitResult(
         method="least_squares",
