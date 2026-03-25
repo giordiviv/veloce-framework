@@ -6,11 +6,22 @@ framework, where `Objective` could be difficult to understand. The
 minimized during the fitting process.
 
 Objective functions available:
-- Residual sum of squares (RSS)
-- Chi-squared statistic (chi2)
-- Root mean square error (RMSE)
-- Log-likelihood (gaussian likelihood)
-- Log-posterior (log-prior + log-likelihood)
+- `residuals`: Residuals between the observed values and the model predictions.
+- `weighted_residuals`: Residuals weighted by the uncertainties of the observed values.
+- `rss`: Residual sum of squares.
+- `chi2`: Chi-squared statistic.
+- `reduced_chi2`: Reduced chi-squared statistic.
+- `rmse`: Root mean square error.
+- `loglikelihood`: Log-likelihood of the data given the model parameters
+(assuming Gaussian errors).
+- `logposterior`: Log-posterior probability of the
+model parameters given the data (log-prior + log-likelihood).
+
+
+Additional functions:
+- `model_y`: Evaluate the model at the given parameters.
+- `theta_full`: Full theta vector corresponding to the given free parameters.
+- `statistics`: Compute all fit statistics for the given parameters.
 """
 
 import logging
