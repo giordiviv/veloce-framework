@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from velocefw.model import BaseModel, CompiledModel, compile_model
+from velocefw.model import CompiledModel
 
 logger = logging.getLogger(__name__)
 
@@ -44,32 +44,12 @@ class _FitResultBase:
     """
 
     method: str
+    model: CompiledModel
     optimizer_result: object
     success: bool
     message: str
     x: np.ndarray
     y: np.ndarray
-
-    def evaluate(
-        self,
-        _compiled_model: BaseModel | CompiledModel,
-        _x: np.ndarray,
-        **_kwargs,  # noqa: ANN003
-    ) -> np.ndarray:
-        """Evaluate the fitted model on new x values.
-
-        Raises
-        ------
-        RuntimeError
-            If the fit did not converge successfully.
-
-        """
-        msg = (
-            "This fit result does not contain fitted parameters. "
-            f"The optimization was not successful: {self.message}."
-        )
-        logger.error(msg)
-        raise RuntimeError(msg)
 
 
 @dataclass(slots=True)
@@ -122,11 +102,8 @@ class SuccessfulFitResult(_FitResultBase):
 
     def evaluate(
         self,
-        compiled_model: BaseModel | CompiledModel,
         x: np.ndarray,
         **kwargs: object,
     ) -> np.ndarray:
         """Evaluate the model at the given parameters."""
-        if isinstance(compiled_model, BaseModel):
-            compiled_model = compile_model(compiled_model)
-        return compiled_model(self.theta_free, x=x, **kwargs)
+        return self.model(self.theta_free, x=x, **kwargs)

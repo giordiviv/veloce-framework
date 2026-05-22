@@ -63,9 +63,10 @@ def fit_least_squares(
     if isinstance(compiled_model, BaseModel):
         compiled_model = compile_model(compiled_model)
 
-    theta0 = np.asarray(theta_free_init, dtype=float).ravel()
     if theta_free_init is None:
         theta0 = np.zeros(compiled_model.n_params_free)
+    else:
+        theta0 = np.asarray(theta_free_init, dtype=float).ravel()
 
     model_evaluator = ModelObjectiveFunction(
         model=compiled_model,
@@ -86,6 +87,7 @@ def fit_least_squares(
     if not optimization_result.success:
         return FailedFitResult(
             method="least_squares",
+            model=compiled_model,
             success=optimization_result.success,
             message=optimization_result.message,
             x=x,
@@ -122,6 +124,7 @@ def fit_least_squares(
 
     return SuccessfulFitResult(
         method="least_squares",
+        model=compiled_model,
         optimizer_result=optimization_result,
         success=optimization_result.success,
         message=optimization_result.message,
