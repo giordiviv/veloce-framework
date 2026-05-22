@@ -147,7 +147,7 @@ def compile_model(
 
         return fn, counter_params + local_ndim
 
-    fn_full, counter_params = compile_fn(model, 0)
+    fn_full, _ = compile_fn(model, 0)
 
     return CompiledModel(model, layout, parametrization, fn_full)
 
