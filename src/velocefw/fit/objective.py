@@ -44,7 +44,7 @@ class ModelObjectiveFunction:
         x: np.ndarray,
         y: np.ndarray,
         yerr: np.ndarray | None = None,
-        log_prior: Callable[[np.ndarray], float] | None = None,
+        logprior: Callable[[np.ndarray], float] | None = None,
     ) -> None:
         """Initialize the ModelObjectiveFunction.
 
@@ -59,7 +59,7 @@ class ModelObjectiveFunction:
         yerr : np.ndarray, optional
             The uncertainties associated with the observed values. If not provided,
             it is assumed that all observations have equal uncertainty.
-        log_prior: Callable[[np.ndarray], float], optional
+        logprior: Callable[[np.ndarray], float], optional
             A function that computes the log prior probability of the model parameters.
             If not provided, it is assumed that the prior is uniform over the
             parameter space.
@@ -71,7 +71,7 @@ class ModelObjectiveFunction:
         self.x = x
         self.y = y
         self.yerr = yerr
-        self.log_prior = log_prior
+        self.logprior = logprior
 
     def model_y(self, theta: list | np.ndarray) -> np.ndarray:
         """Evaluate the model at the given parameters.
@@ -148,7 +148,7 @@ class ModelObjectiveFunction:
 
     def logposterior(self, theta_free: np.ndarray) -> float:
         """Compute the log-posterior (log-prior + log-likelihood)."""
-        lp = 0.0 if self.log_prior is None else float(self.log_prior(theta_free))
+        lp = 0.0 if self.logprior is None else float(self.logprior(theta_free))
         if not np.isfinite(lp):
             return -np.inf
         ll = self.loglikelihood(theta_free)
