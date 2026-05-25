@@ -35,26 +35,29 @@ def fit_least_squares(
     Parameters
     ----------
     compiled_model : BaseModel or CompiledModel
-        The model to be fitted. If a BaseModel is provided, it will be compiled.
+        The model to be fitted. If a ``BaseModel`` is provided, it will be compiled.
     x : list or np.ndarray
-        The input values at which to evaluate the model.
+        Abscissa values of the observations to fit.
     y : list or np.ndarray
-        The observed values corresponding to the input values.
+        Ordinate values of the observations input in ``x``.
     yerr : list or np.ndarray, optional
-        The uncertainties associated with the observed values. If not provided,
-        it is assumed that all observations have equal uncertainty.
+        The uncertainties (only y-axis) associated with the observed values. If
+        not provided, it is assumed that all observations have equal
+        uncertainty.
     theta_free_init : list or np.ndarray, optional
         Initial guess for the free parameters of the model. If not provided, it
         is assumed to be a vector of zeros.
     **kwargs : object
         Additional keyword arguments that will be passed to
-        scipy.optimize.least_squares.
+        ``scipy.optimize.least_squares``.
 
     Returns
     -------
-    FitResult
+    SuccessfulFitResult | FailedFitResults
         A dataclass containing the results of the fit, including the best-fit
         parameters, the fit statistics, and the optimization result.
+        Depending if the fit was successful, a different class containing
+        different quantities is used.
 
     """
     x = np.asarray(x, dtype=float)
