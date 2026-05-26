@@ -82,7 +82,7 @@ def fit_map(  # noqa: PLR0913
     }
 
     return SuccessfulFitResult(
-        method="least_squares",
+        method="map",
         model=compiled_model,
         optimizer_result=optimization_result,
         success=optimization_result.success,
