@@ -1,5 +1,6 @@
 """Fitting module for the Veloce Framework."""
 
+from velocefw.fit.differential_evolution import differential_evolution_posterior
 from velocefw.fit.leastsq import fit_least_squares
 from velocefw.fit.map import fit_map
 from velocefw.fit.objective import ModelObjectiveFunction
@@ -16,6 +17,7 @@ __all__ = [
     "FitStatistics",
     "ModelObjectiveFunction",
     "SuccessfulFitResult",
+    "differential_evolution_posterior",
     "fit_least_squares",
     "fit_map",
 ]
