@@ -11,6 +11,7 @@ from the free parameters according to the defined sharing structure.
 
 from __future__ import annotations
 
+import functools
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -21,6 +22,32 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
 logger = logging.getLogger(__name__)
+
+
+def _identity_expand(theta_free: np.ndarray, full_ndim: int) -> np.ndarray:
+    if len(theta_free) != full_ndim:
+        msg = f"Expected free theta of len {full_ndim}, got {len(theta_free)}"
+        logger.error(msg)
+        raise ValueError(msg)
+    return theta_free
+
+
+def _shared_expand(
+    theta_free: np.ndarray,
+    full_ndim: int,
+    num_free_params: int,
+    classes: dict[int, list[int]],
+    root_to_free_index: dict[int, int],
+) -> np.ndarray:
+    theta_free = np.asarray(theta_free, dtype=float).ravel()
+    if len(theta_free) != num_free_params:
+        msg = f"Expected free theta of len {num_free_params}, got {len(theta_free)}"
+        logger.error(msg)
+        raise ValueError(msg)
+    theta_full = np.empty(full_ndim, dtype=float)
+    for root, indices in classes.items():
+        theta_full[indices] = theta_free[root_to_free_index[root]]
+    return theta_full
 
 
 @dataclass(frozen=True)
@@ -52,13 +79,7 @@ class Parametrization:
             a 1-to-1 mapping between free and full parameters.
 
         """
-
-        def expand(theta_free: np.ndarray) -> np.ndarray:
-            if len(theta_free) != full_ndim:
-                msg = f"Expected free theta of len {full_ndim}, got {len(theta_free)}"
-                logger.error(msg)
-                raise ValueError(msg)
-            return theta_free
+        expand = functools.partial(_identity_expand, full_ndim=full_ndim)
 
         mask_free = np.ones(full_ndim, dtype=bool)
         return Parametrization(
@@ -69,7 +90,7 @@ class Parametrization:
         )
 
     @staticmethod
-    def from_shared(  # noqa: C901
+    def from_shared(
         full_ndim: int,
         shared_groups: Sequence[Sequence[int]],
     ) -> Parametrization:
@@ -139,20 +160,13 @@ class Parametrization:
         num_free_params = len(unique_roots)
 
         # Build mapping from free to full
-        def expand(theta_free: np.ndarray) -> np.ndarray:
-            theta_free = np.asarray(theta_free, dtype=float).ravel()
-            if len(theta_free) != num_free_params:
-                msg = (
-                    "Expected free theta of len "
-                    f"{num_free_params}, got {len(theta_free)}"
-                )
-                logger.error(msg)
-                raise ValueError(msg)
-            theta_full = np.empty(full_ndim, dtype=float)
-            for root, indices in classes.items():
-                free_index = root_to_free_index[root]
-                theta_full[indices] = theta_free[free_index]
-            return theta_full
+        expand = functools.partial(
+            _shared_expand,
+            full_ndim=full_ndim,
+            num_free_params=num_free_params,
+            classes=classes,
+            root_to_free_index=root_to_free_index,
+        )
 
         mask_free = np.zeros(full_ndim, dtype=bool)
         for root in unique_roots:
