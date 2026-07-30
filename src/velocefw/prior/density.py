@@ -28,8 +28,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_N_GRID = 1000
-
 
 def _padded_domain(values: np.ndarray, padding: float) -> tuple[float, float]:
     """Return array extremes after padding them by a percentage.
@@ -158,7 +156,10 @@ class KDEDensity:
 
         """
         self._require_fitted()
-        row = np.array([[values[v] for v in self.var_names]])
+        for v, (lo, hi) in self.domain.items():
+            if not (lo <= float(values[v]) <= hi):
+                return -np.inf
+        row = np.array([values[v] for v in self.var_names])
         pdf_val = float(np.atleast_1d(self._kde.pdf(row))[0])
         return float(np.log(max(pdf_val, 1e-300)))
 
@@ -356,6 +357,40 @@ class SplineDensity:
         if val < self._lo or val > self._hi:
             return -np.inf
         return float(self._spline(val))
+
+    def pdf(self, values: dict[str, float]) -> float:
+        """Evaluate the normalised probability density."""
+        lp = self.log_pdf(values)
+        return float(np.exp(lp)) if np.isfinite(lp) else 0.0
+
+
+class UniformDensity:
+    """Uniform density on [lo, hi) — same interface as SplineDensity."""
+
+    def __init__(self, var_name: str, lo: float, hi: float) -> None:
+        """Initialize a uniform density between ``lo`` and ``hi``.
+
+        Only the lower bound is included. Half-open interval.
+
+        Parameters
+        ----------
+        var_name: str
+            Name of the variable.
+        lo: float
+            Lower bound.
+        hi: float
+            Upper bound
+
+        """
+        self.var_names = [var_name]
+        self.domain = {var_name: (lo, hi)}
+        self._lo, self._hi = lo, hi
+        self._log_norm = -np.log(hi - lo)  # 0.0 for U(0,1)
+
+    def log_pdf(self, values: dict) -> float:
+        """Evaluate the normalised log density (between the extremes)."""
+        val = float(values[self.var_names[0]])
+        return self._log_norm if self._lo <= val <= self._hi else -np.inf
 
     def pdf(self, values: dict[str, float]) -> float:
         """Evaluate the normalised probability density."""

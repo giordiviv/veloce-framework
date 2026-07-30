@@ -18,7 +18,12 @@ Typical three-step workflow:
 
 """
 
-from velocefw.prior.density import KDEConditionalDensity, KDEDensity, SplineDensity
+from velocefw.prior.density import (
+    KDEConditionalDensity,
+    KDEDensity,
+    SplineDensity,
+    UniformDensity,
+)
 from velocefw.prior.prior import CombinedLogPrior, ParameterPrior
 
 __all__ = [
@@ -27,4 +32,5 @@ __all__ = [
     "KDEDensity",
     "ParameterPrior",
     "SplineDensity",
+    "UniformDensity",
 ]
