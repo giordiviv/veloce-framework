@@ -13,7 +13,7 @@ Two classes are provided:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 
@@ -21,6 +21,16 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
 logger = logging.getLogger(__name__)
+
+
+class Density(Protocol):
+    """Protocol for a density distribution."""
+
+    var_names: Sequence[str]
+
+    def log_pdf(self, values: dict[str, float]) -> float:
+        """Calculate log of probability density."""
+        ...
 
 
 class ParameterPrior:
@@ -49,14 +59,14 @@ class ParameterPrior:
 
     def __init__(
         self,
-        density: object,
+        density: Density,
         var_to_index: dict[str, int],
     ) -> None:
         """Initialize the ParameterPrior from a object describing a density.
 
         Parameters
         ----------
-        density : object
+        density : Density
             Any density object with ``.var_names`` and ``.log_pdf(dict) -> float``.
             Typically a ``KDEDensity``, ``ConditionalDensity``, or ``SplineDensity``.
         var_to_index : dict[str, int]

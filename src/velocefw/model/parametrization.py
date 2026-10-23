@@ -32,6 +32,25 @@ def _identity_expand(theta_free: np.ndarray, full_ndim: int) -> np.ndarray:
     return theta_free
 
 
+def _fixed_expand(
+    theta_free: np.ndarray,
+    full_ndim: int,
+    free_ndim: int,
+    fixed_index: int,
+    fixed_value: float,
+) -> np.ndarray:
+    theta_free = np.asarray(theta_free, dtype=float).ravel()
+    if len(theta_free) != free_ndim:
+        msg = f"Expected free theta of len {free_ndim}, got {len(theta_free)}"
+        logger.error(msg)
+        raise ValueError(msg)
+    theta_full = np.empty(full_ndim, dtype=float)
+    theta_full[:fixed_index] = theta_free[:fixed_index]
+    theta_full[fixed_index] = fixed_value
+    theta_full[fixed_index + 1 :] = theta_free[fixed_index:]
+    return theta_full
+
+
 def _shared_expand(
     theta_free: np.ndarray,
     full_ndim: int,
@@ -85,6 +104,48 @@ class Parametrization:
         return Parametrization(
             full_ndim=full_ndim,
             free_ndim=full_ndim,
+            mask_free=mask_free,
+            expand=expand,
+        )
+
+    @staticmethod
+    def with_fixed(
+        full_ndim: int,
+        fixed_index: int,
+        fixed_value: float,
+    ) -> Parametrization:
+        """Parametrization with one parameter held fixed at a constant value.
+
+        Parameters
+        ----------
+        full_ndim : int
+            Total number of parameters in the full global theta vector.
+        fixed_index : int
+            Index of the parameter to fix in the full theta vector.
+        fixed_value : float
+            Value to hold the fixed parameter at.
+
+        Returns
+        -------
+        Parametrization
+            Parametrization with ``free_ndim = full_ndim - 1`` free parameters.
+            ``expand`` inserts ``fixed_value`` at ``fixed_index`` when mapping
+            the free vector back to the full vector.
+
+        """
+        free_ndim = full_ndim - 1
+        mask_free = np.ones(full_ndim, dtype=bool)
+        mask_free[fixed_index] = False
+        expand = functools.partial(
+            _fixed_expand,
+            full_ndim=full_ndim,
+            free_ndim=free_ndim,
+            fixed_index=fixed_index,
+            fixed_value=float(fixed_value),
+        )
+        return Parametrization(
+            full_ndim=full_ndim,
+            free_ndim=free_ndim,
             mask_free=mask_free,
             expand=expand,
         )

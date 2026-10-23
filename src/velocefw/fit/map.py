@@ -18,7 +18,7 @@ from velocefw.model import BaseModel, CompiledModel, compile_model
 logger = logging.getLogger(__name__)
 
 
-def fit_map(  # noqa: PLR0913
+def fit_map(  # noqa: PLR0913, PLR0917
     compiled_model: BaseModel | CompiledModel,
     x: list | np.ndarray,
     y: list | np.ndarray,
@@ -71,7 +71,10 @@ def fit_map(  # noqa: PLR0913
 
     # If the optimization was successful, compute the fit statistics
     fit_statistics = model_evaluator.statistics(optimization_result.x)
-    logprior_value = model_evaluator.logprior(optimization_result.x)
+    if model_evaluator.logprior is None:
+        logprior_value = None
+    else:
+        logprior_value = model_evaluator.logprior(optimization_result.x)
     loglikelihood_value = model_evaluator.loglikelihood(optimization_result.x)
     logposterior_value = model_evaluator.logposterior(optimization_result.x)
 

@@ -191,6 +191,18 @@ class CompiledModel:
         mask = self.parametrization.mask_free
         return np.array(self.layout.names)[mask].tolist()
 
+    def __getstate__(self) -> dict:
+        """Delete fn_full before trying to pickle the object."""
+        state = self.__dict__.copy()
+        del state["fn_full"]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Set the state when unpacking the pickle file."""
+        self.__dict__.update(state)
+        recompiled = compile_model(self.model, self.parametrization)
+        self.fn_full = recompiled.fn_full
+
     def __call__(
         self,
         theta_free: list | np.ndarray,

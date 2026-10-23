@@ -319,7 +319,7 @@ class BaseModel:
     def n_params(self) -> int:
         """Number of parameters in the model."""
         msg = "Subclasses of BaseModel must implement n_params property."
-        logger.exception(msg)
+        logger.error(msg)
         raise NotImplementedError(msg)
 
     @property
@@ -332,11 +332,11 @@ class BaseModel:
         """
         return [f"p{i}" for i in range(self.n_params)]
 
-    def evaluate(
+    def evaluate(  # pyrefly: ignore
         self,
-        theta: list | np.ndarray,  # noqa: ARG002
-        x: float | list | np.ndarray,  # noqa: ARG002
-        **kwargs: object,  # noqa: ARG002
+        theta: list | np.ndarray,
+        x: float | list | np.ndarray,
+        **kwargs: object,
     ) -> np.ndarray:
         """Evaluate the model or submodel at the given parameters `theta` and input `x`.
 
@@ -362,8 +362,9 @@ class BaseModel:
             Models needs to implement this method
 
         """
+        del theta, x, kwargs
         msg = "Subclasses of BaseModel must implement evaluate method."
-        logger.exception(msg)
+        logger.error(msg)
         raise NotImplementedError(msg)
 
     # Implemented methods --------------------------------------------------------------
@@ -560,7 +561,7 @@ class FixedConstant(BaseModel):
             The name of the model. If None, the name is set to "fixed_c".
 
         """
-        self._value = float(value)
+        self._value = value
         if name is None:
             name = "fixed_c"
         super().__init__(name=name)
@@ -577,7 +578,7 @@ class FixedConstant(BaseModel):
 
     def evaluate(
         self,
-        theta: list | np.ndarray,  # noqa: ARG002
+        theta: list | np.ndarray,
         x: float | list | np.ndarray,
         **kwargs: object,  # noqa: ARG002
     ) -> np.ndarray:
@@ -604,6 +605,7 @@ class FixedConstant(BaseModel):
             fixed value of the model.
 
         """
+        del theta
         return np.full_like(x, self._value, dtype=float)
 
 

@@ -211,6 +211,7 @@ class KDEDensity:
     def _pdf_batch(self, rows: np.ndarray) -> np.ndarray:
         """Evaluate PDF on a 2-D array of rows (n_rows, n_vars). Internal use."""
         self._require_fitted()
+        # pyrefly: ignore [missing-attribute]
         return np.asarray(self._kde.pdf(rows), dtype=float)
 
 

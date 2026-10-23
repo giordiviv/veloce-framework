@@ -1,0 +1,198 @@
+Article reference: aa58106-25
+Title: VELOCE III. Reconstructing Radial Velocity Curves of Classical Cepheids
+Author(s): Giordano Viviani, Richard I. Anderson
+Journal: Astronomy & Astrophysics (A&A), 2026
+J/A+A/                                                      (Viviani+, 2026)
+================================================================================
+VELOCE-III. Reconstructing radial velocity curves of classical Cepheids
+    Giordano Viviani, Richard I. Anderson
+================================================================================
+ADC_Keywords: Radial velocities; Stars, variable; Binaries, spectroscopic;
+Keywords: Stars: oscillations - Stars: variables: Cepheids -
+          Techniques: radial velocities
+
+Abstract:
+  We present a novel framework for accurately reconstructing radial velocity
+  (RV) curves of classical Cepheids (Cepheids) from sparsely sampled time-series
+  data suitable for application in large spectroscopic surveys. The framework
+  provides a prior for the principal components of RV curves established based
+  on high-precision measurements from the VELOcities of CEpheids (VELOCE)
+  project; template RV curves of Cepheids can be readily extracted from our
+  results. We demonstrate the ability of our framework to estimate unbiased
+  pulsation average velocities, v_ gamma, to within 20-30 m/s, and peak-to-peak
+  amplitudes, P2P, to within ~1.1%. Subsampling the initial data set, we show
+  that v_ gamma and P2P can be determined to within ~500 m/s and 4%,
+  respectively, from as few as three observations drawn at random pulsation
+  phases, with the phase of minimum radius fitted rather than assumed. As
+  expected, the precision on both v_gamma and P2P improves markedly with the
+  number of observations, N_RV; the precision on P2P stabilizes beyond
+  N_RV~10-15, whereas that on v_gamma continues to improve. We fitted existing
+  time-series RV data of Cepheids in the Large and Small Magellanic Clouds (LMC,
+  SMC) using this framework and obtained typical root mean square errors of
+  0.5-2.0 km/s. The typical total uncertainty on v_gamma achieved for the SMC
+  Cepheids is ~0.84 km/s, providing sensitivity to spectroscopic binaries (SB).
+  We identified 8 SB1 systems; two and one of which are new detections in the
+  LMC and SMC, respectively. This yields a single-lined SB fraction of ~25% and
+  27% in the two galaxies, similar to the Milky Way's SB fraction of 29%,
+  established as part of VELOCE. Despite their relatively small number, LMC
+  Cepheids reproduce the known line-of-sight component of the LMC's large-scale
+  rotation, which differs in the extremes by more than 80km/s. The kinematics of
+  the SMC are more complex and not sufficiently sampled by the available
+  Cepheids. Our framework is designed to yield accurate v_gamma and P2P of
+  Cepheids observed by large spectroscopic surveys, such as 4MOST, SDSS-V, and
+  others, and will unlock new insights into the kinematics and multiplicity of
+  evolved intermediate-mass stellar populations.
+
+Description:
+  A principal component analysis (PCA) was applied to the Fourier-series models
+  of the radial velocity (RV) curves of 219 Galactic classical Cepheids from
+  VELOCE DR1 (Anderson et al., 2024A&A...686A.177A), sampled on a uniform grid
+  of 1000 phase points in [0,1), with phase 0 at minimum radius. The PCA was
+  computed on a randomly selected training set  (85% of the stars) after
+  subtracting the mean training-set curve, Vmean; the remaining stars form the
+  test set. The first six principal components (PCs), which explain ~99.2% of
+  the variance, were retained. An RV curve is then modelled as V(phi) = vgamma +
+  Vmean(phi+dphi) + sum_{i=1}^{6} p_i PC_i(phi+dphi). File pca.dat lists Vmean
+  and the six PCs on the phase grid. File coeffs.dat lists, for each Cepheid,
+  log P, the training/test membership, the PC coefficients p_i obtained by
+  fitting its VELOCE-I model, and the phase offset dphi between the Gaia DR3
+  G-band reference epoch and minimum radius. File kde.dat lists the bandwidths
+  and domains of the kernel density estimates (KDE) that defines the priors
+  P(p_1,...,p_6|log P) and P(dphi|log P). The priors can be rebuilt exactly from
+  the training-set rows of coeffs.dat and kde.dat. File tableb1.dat (Table B.1)
+  lists the results of applying the framework to literature RV time series of 22
+  LMC Cepheids (Storm et al.,2011A&A...534A..95S) and 24 SMC Cepheids (Gieren et
+  al., 2018A&A...620A..99G).
+
+File Summary:
+--------------------------------------------------------------------------------
+ FileName    Lrecl  Records  Explanations
+--------------------------------------------------------------------------------
+ReadMe          80        .  This file
+pca.dat         94     1000  Mean RV curve and principal components
+coeffs.dat     104      216  PC coefficients of the VELOCE-I Cepheids
+kde.dat         62        9  Bandwidths and domains of the KDE priors
+tableb1.dat     63       46  RV curve properties of LMC and SMC Cepheids (Table
+                              B.1)
+--------------------------------------------------------------------------------
+
+Byte-by-byte Description of file: pca.dat
+--------------------------------------------------------------------------------
+Bytes   Format Units  Label  Explanations
+--------------------------------------------------------------------------------
+ 1- 5   F5.3   ---    Phase   Pulsation phase (phase 0 at minimum radius) (1)
+ 7-16   F10.6  km.s-1 Vmean   Mean RV curve of the training set (2)
+18-29   F12.9  ---    PC1     Principal component 1 (3)
+31-42   F12.9  ---    PC2     Principal component 2 (3)
+44-55   F12.9  ---    PC3     Principal component 3 (3)
+57-68   F12.9  ---    PC4     Principal component 4 (3)
+70-81   F12.9  ---    PC5     Principal component 5 (3)
+83-94   F12.9  ---    PC6     Principal component 6 (3)
+
+--------------------------------------------------------------------------------
+Note (1): 1000 equally spaced points, 0 <= phase < 1 (step 0.001).
+    The curves are periodic: phase 1 is equivalent to phase 0.
+Note (2): Mean of the training-set curves, with vgamma removed.
+Note (3): Unit-norm eigenvectors (sum of squares over the grid = 1),
+    ordered by explained variance ratio, in %:
+    66.23, 16.22, 11.86, 2.75, 1.69, 0.43
+--------------------------------------------------------------------------------
+
+Byte-by-byte Description of file: coeffs.dat
+--------------------------------------------------------------------------------
+  Bytes   Format Units  Label  Explanations
+--------------------------------------------------------------------------------
+  1- 19   A19    ---    Name    Cepheid name, as in VELOCE-I
+ 21- 25   A5     ---    Set     [test/train] PCA training or test set (4)
+ 27- 34   F8.6   [d]    logP    Log of the pulsation period (VELOCE-I)
+ 36- 44   F9.4   km.s-1 p1      Coefficient of PC1 (5)
+ 46- 54   F9.4   km.s-1 p2      Coefficient of PC2 (5)
+ 56- 64   F9.4   km.s-1 p3      Coefficient of PC3 (5)
+ 66- 74   F9.4   km.s-1 p4      Coefficient of PC4 (5)
+ 76- 84   F9.4   km.s-1 p5      Coefficient of PC5 (5)
+ 86- 94   F9.4   km.s-1 p6      Coefficient of PC6 (5)
+ 96-104   F9.6   ---    dphi   ? Phase offset between Gaia DR3 G-band epoch and
+                               minimum radius (6)
+
+--------------------------------------------------------------------------------
+Note (4): The PCs and the KDE priors were derived from the training set
+    only; the test set was used for validation.
+Note (5): Coefficients p_i of the PC model fitted to the star's VELOCE-I
+    Fourier-series model (Eq. 1 of the paper).
+Note (6): dphi = [((E_GaiaDR3 - E_VELOCE)/P_VELOCE + 0.5) mod 1] - 0.5
+    (Eq. 2 of the paper). Missing when the star is absent from the Gaia
+    DR3 vari_cepheid table or the phase drift exceeds 0.1.
+--------------------------------------------------------------------------------
+
+Byte-by-byte Description of file: kde.dat
+--------------------------------------------------------------------------------
+Bytes   Format Units  Label  Explanations
+--------------------------------------------------------------------------------
+ 1- 4   A4     ---    Prior   [PC/dphi] Prior to which the row applies (7)
+ 6- 9   A4     ---    Var     Variable of the KDE (column label in coeffs.dat)
+11-14   A4     ---    Unit    Unit of bw, Min and Max (9)
+16-30   E15.8  ---    bw      Gaussian kernel bandwidth (cv_ml)
+32-46   E15.8  ---    Min     Lower bound of the prior domain (8)
+48-62   E15.8  ---    Max     Upper bound of the prior domain (8)
+
+--------------------------------------------------------------------------------
+Note (7): PC = 7-D KDE of (logP, p1,...,p6); dphi = 2-D KDE of
+    (logP, dphi). Both use Gaussian product kernels (statsmodels
+    KDEMultivariate, var_type='c'*n, bw='cv_ml') on the training set.
+    The prior at a given period is the KDE conditioned on logP.
+Note (8): Training-set minimum and maximum, extended by 10% of the
+    training-set range on each side.
+Note (9): [d] = decimal logarithm of a period in days (CDS convention).
+    For logP, bw is a width in log P, i.e. in dex.
+--------------------------------------------------------------------------------
+
+Byte-by-byte Description of file: tableb1.dat
+--------------------------------------------------------------------------------
+Bytes   Format Units  Label    Explanations
+--------------------------------------------------------------------------------
+ 1-12   A12    ---    Name      Cepheid identifier (10)
+14-16   A3     ---    Gal       [LMC/SMC] Host galaxy
+18-28   A11    ---    Ref       Source of the RV time series (10)
+30-35   F6.2   km.s-1 vgamma    Pulsation-averaged (systemic) velocity (11)
+37-40   F4.2   km.s-1 e_vgamma  Uncertainty on vgamma
+42-46   F5.2   km.s-1 P2Pvgcl  ? Peak-to-peak variation of the cluster-averaged
+                               vgamma (11)
+48-52   F5.2   km.s-1 P2P       Peak-to-peak pulsation amplitude of the model
+54-57   F4.2   km.s-1 RMSE      Root-mean-square error of the fit
+59-61   F3.1   %      RMSE/P2P  Ratio of RMSE to P2P
+63-63   A1     ---    SB1       [YN] Evidence of orbital motion (11)
+
+--------------------------------------------------------------------------------
+Note (10): LMC: names and RV time series from Storm et al.
+    (2011A&A...534A..95S); SMC: OGLE identifiers and RV time series from
+    Gieren et al. (2018A&A...620A..99G).
+Note (11): For SB1=Y stars, results of the hierarchical fit with
+    cluster-specific vgamma (M_RV^MULTI) and P2P of the cluster-averaged
+    vgamma; otherwise results of the single-vgamma fit (M_RV^SOLO).
+    SMC-CEP-0524 formally exceeds the f_sigma,cluster threshold but is
+    considered probably single (Sect. 4.4 of the paper).
+--------------------------------------------------------------------------------
+
+
+
+See also:
+ 2024A&A...686A.177A : Anderson et al. (2024) (VELOCE-I)
+ 2011A&A...534A..95S : Storm et al. (2011)
+ 2018A&A...620A..99G : Gieren et al. (2018)
+
+
+Acknowledgements:
+This work was supported by the European Research Council (ERC) under the
+European Union’s Horizon 2020 research and innovation programme (Grant
+Agreement No. 947660). RIA was funded by the SNSF through an Eccellenza
+Professorial Fellowship, grant number PCEFP2\_194638. Funded by
+zukunft.niedersachsen, the joint science funding program of the Lower Saxony
+Ministry of Science and Culture and the Volkswagen Foundation. This research
+has made use of the VizieR catalogue access tool, CDS, Strasbourg Astronomical
+Observatory, France (DOI : 10.26093/cds/vizier). This research has made use of
+the SIMBAD database, CDS, Strasbourg Astronomical Observatory, France. This
+research has made use of the Astrophysics Data System, funded by NASA under
+Cooperative Agreement 80NSSC21M0056.
+
+================================================================================
+    Prepared by Giordano Viviani					     End
