@@ -1,15 +1,14 @@
 # veloce-framework (`velocefw`)
-
-[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
-[![Tests: pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)](tests/)
 [![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#roadmap)
-[![Last commit](https://img.shields.io/github/last-commit/giordiviv/veloce-framework)](https://github.com/giordiviv/veloce-framework/commits/main)
 [![A&A](https://img.shields.io/badge/A%26A-VELOCE%20III-b31b1b.svg)](https://doi.org/10.1051/0004-6361/202558106)
 <!-- Add once available:
+[![Last commit](https://img.shields.io/github/last-commit/giordiviv/veloce-framework)](https://github.com/giordiviv/veloce-framework/commits/main)
 [![CI](https://github.com/giordiviv/veloce-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/giordiviv/veloce-framework/actions/workflows/ci.yml)
+[![Tests: pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)](tests/)
 -->
 
 **velocefw** is a lightweight Python framework for **building parametric models by
